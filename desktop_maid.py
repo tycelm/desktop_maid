@@ -6,6 +6,7 @@ import win32gui
 import datetime
 import csv
 import webbrowser
+import time
 
 monitor_info = GetMonitorInfo(MonitorFromPoint((0, 0)))
 work_area = monitor_info.get("Work")
@@ -228,6 +229,17 @@ def callback(url):
     webbrowser.open_new(url)
 
 
+def farewell(event):
+    goodbyes = ['It was my honour..\nto serve you...', "I'm sorry...", "I'm a disgrace..\n to my code...",
+                "So.. cold...", 'Maid in Abyss\n (haha get it)', "But I'm..\n still needed...", 'So.. dark...']
+    text_box.set_text(random.choice(goodbyes))
+    text_box.show()
+    window.after(2000, window.destroy)
+
+
+# def shut_down():
+#     raise SystemExit(0)
+
 # put da gifs (pronounced like gift without the t) into da list
 idle = [tk.PhotoImage(file=impath + 'idle.gif', format='gif -index %i' % i) for i in range(64)]  # idle gif
 sleep = [tk.PhotoImage(file=impath + 'scrub.gif', format='gif -index %i' % i) for i in range(15)]  # sleep gif
@@ -269,8 +281,9 @@ def foreground_check(mode):
     elif 'YouTube' in temp_window_name:
         if not mode == 'watch':
             mode = 'prep'
-    elif mode in {'watch', 'class'}:
+    elif mode in {'watch', 'class'} and temp_window_name not in {'Chat', 'tk'}:
         if mode == 'class':
+            print(temp_window_name)
             text_box.set_text('Class better be over >:[')
             text_box.show()
         mode = 'idle'
@@ -281,6 +294,7 @@ def foreground_check(mode):
 label.bind('<Button-1>', save_last_click)
 label.bind('<B1-Motion>', dragging)
 label.bind('<ButtonRelease-1>', release)
+label.bind('<Button-3>', farewell)
 
 # here goes nothing
 start()
