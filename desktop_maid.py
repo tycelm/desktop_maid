@@ -33,7 +33,7 @@ class TextBox(tk.Frame):
         tk.Frame.__init__(self, *args, **kwargs)
         self.image = tk.PhotoImage(file=impath + 'chatbox.png')
         self.text_box = tk.Label(self, bd=0, bg='black', image=self.image, compound='center', fg="#ffffff",
-                                 font=("Courier", 22), cursor="hand2")
+                                 font=("Aleo", 22), cursor="hand2")
         self.text_box.pack()
         self.text_box.place(relwidth=1, relheight=1)
         ######################################################################################
