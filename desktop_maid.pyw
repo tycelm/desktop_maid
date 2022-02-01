@@ -6,7 +6,6 @@ import win32gui
 import datetime
 import csv
 import webbrowser
-import time
 
 monitor_info = GetMonitorInfo(MonitorFromPoint((0, 0)))
 work_area = monitor_info.get("Work")
