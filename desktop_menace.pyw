@@ -56,7 +56,7 @@ class TextBox(tk.Frame):
             self.hiding = False
 
 
-class Lecture:
+class Task:
     """Stores the day of the week, time, and zoom link"""
     name: str
     time: datetime.datetime
@@ -70,45 +70,37 @@ class Lecture:
         self.info = info
 
 
-def make_schedule(day: int):
-    classes_so_far = []
+def make_schedule():
+    tasks_so_far = []
     now = datetime.datetime.now()
     with open('schedule.csv', newline='') as file:
         r = csv.reader(file)
-
-        # Skip rows until we make it to the day of the week
-        for _ in range(day + 1):
-            next(r)
 
         # puts them into the list
         row = next(r)
         for data in row:
             if data != '':
-                lecture = data.split(',')
-                lecture_time = now.replace(hour=int(lecture[1].split(':')[0]), minute=int(lecture[1].split(':')[1]))
-                if now < lecture_time:
-                    name = lecture[0].strip()
-                    time = lecture_time
-                    link = lecture[2].strip()
-                    info = lecture[3].strip()
-                    classes_so_far.append(Lecture(name, time, link, info))
-    return classes_so_far
+                task = data.split(',')
+                task_time = now.replace(hour=int(task[1].split(':')[0]), minute=int(lecture[1].split(':')[1]))
+                if now < task_time:
+                    name = task[0].strip()
+                    time = task_time
+                    link = task[2].strip()
+                    info = task[3].strip()
+                    tasks_so_far.append(Task(name, time, link, info))
+    return tasks_so_far
 
 
 def start():
     """Start off animation (which i gave up on implementing) and logistics"""
-    weekday = datetime.datetime.today().weekday()
-    today_schedule = make_schedule(weekday)
-    if not today_schedule:
-        text_box.set_text("Wow! Empty schedule!\nLet's try to be\nproductive anyway :3")
-        text_box.show()
-    else:
-        event_checker(today_schedule)
+    today_schedule = make_schedule()
+    text_box.set_text("MEOW!!!")
+    text_box.show()
     update(0, 1000, 'left', 0, screen_width - 400, work_area[3] - 475, 5)
 
 
 # transfer random no. to event
-def pet_status(event_number: int) -> (str, int):
+def pet_status(event_number: int) -> tuple[str, int]:
     space = 500
     status = None
 
@@ -157,12 +149,12 @@ def movement(mode: str, x: int) -> int:
     """Handles the movement"""
     if mode == 'left':
         if x > - 550:
-            x -= 1
+            x -= 2
         else:
             x = screen_width - 400
     elif mode == 'right':
         if x < screen_width - 400:
-            x += 1
+            x += 2
         else:
             x = -550
     return x
