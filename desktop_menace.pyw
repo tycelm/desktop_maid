@@ -5,7 +5,6 @@ from win32api import GetMonitorInfo, MonitorFromPoint
 import win32gui
 import datetime
 import csv
-import webbrowser
 
 monitor_info = GetMonitorInfo(MonitorFromPoint((0, 0)))
 work_area = monitor_info.get("Work")
@@ -19,10 +18,10 @@ global drag
 drag = False # gives error, but i need it
 global falling
 falling = False # gives error, but i need it
-idle_num = [x for x in range(8)]
+idle_num = [x for x in range(10)]
 sit_num = [x for x in range(15, 20)]
-walk_left = [x for x in range(8, 11)]
-walk_right = [x for x in range(11, 15)]
+walk_left = [x for x in range(10, 12)]
+walk_right = [x for x in range(12, 15)]
 impath = f"{os.getcwd()}\\cats\\"
 
 
@@ -55,60 +54,70 @@ class TextBox(tk.Frame):
             self.text_box.place(relx=0, relwidth=1, relheight=1)
             self.hiding = False
 
+# new to prepare a whole new UI box for the scheduling
 
-class Lecture:
+class Task:
     """Stores the day of the week, time, and zoom link"""
     name: str
     time: datetime.datetime
-    link: str
     info: str
 
-    def __init__(self, name: str, time: datetime.datetime, link: str, info: str):
+    def __init__(self, name: str, time: datetime.datetime, info: str):
         self.name = name
         self.time = time
-        self.link = link
         self.info = info
 
 
-def make_schedule(day: int):
-    classes_so_far = []
+def make_schedule():
+    tasks_so_far = []
     now = datetime.datetime.now()
     with open('schedule.csv', newline='') as file:
         r = csv.reader(file)
 
-        # Skip rows until we make it to the day of the week
-        for _ in range(day + 1):
-            next(r)
-
-        # puts them into the list
+        # puts them into the list if they have a time
         row = next(r)
         for data in row:
             if data != '':
-                lecture = data.split(',')
-                lecture_time = now.replace(hour=int(lecture[1].split(':')[0]), minute=int(lecture[1].split(':')[1]))
-                if now < lecture_time:
-                    name = lecture[0].strip()
-                    time = lecture_time
-                    link = lecture[2].strip()
-                    info = lecture[3].strip()
-                    classes_so_far.append(Lecture(name, time, link, info))
-    return classes_so_far
+                task = data.split(',')
+                task_time = now.replace(hour=int(task[1].split(':')[0]), minute=int(task[1].split(':')[1]))
+                if now < task_time:
+                    name = task[0].strip()
+                    time = task_time
+                    info = task[2].strip()
+                    tasks_so_far.append(Task(name, time, info))
+    return tasks_so_far
+
+
+# add to schedule function
+def add_to_schedule(tasks_so_far):
+    """Adds to the csv as well as modified the UI accordingly"""
+    # maybe the UI work is best done in another function 
+    # do something about duplicate names
+
+    return
+
+def remove_from_schedule(tasks_so_far, task_name):
+    """Removes from the csv as well as modify the UI accordingly"""
+    # maybe the UI work is best done in another function 
+
+    return
+
+# reorder tasks list function
+def reorder_schedule():
+
+    return
 
 
 def start():
     """Start off animation (which i gave up on implementing) and logistics"""
-    weekday = datetime.datetime.today().weekday()
-    today_schedule = make_schedule(weekday)
-    if not today_schedule:
-        text_box.set_text("Wow! Empty schedule!\nLet's try to be\nproductive anyway :3")
-        text_box.show()
-    else:
-        event_checker(today_schedule)
-    update(0, 1000, 'left', 0, screen_width - 400, work_area[3] - 475, 5)
+    todo = make_schedule()
+    text_box.set_text("MEOW!!!")
+    text_box.show()
+    update(0, 1000, 'left', 0, screen_width - 400, work_area[3] - 475, 5, todo)
 
 
 # transfer random no. to event
-def pet_status(event_number: int) -> (str, int):
+def pet_status(event_number: int) -> tuple[str, int]:
     space = 500
     status = None
 
@@ -123,6 +132,7 @@ def pet_status(event_number: int) -> (str, int):
     return status, space
 
 
+# release the pet
 def release(event):
     global drag
     drag = False
@@ -135,7 +145,7 @@ def release(event):
 
 # gif looper
 def gif_work(mode: str, cycle: int, ran):
-    """This makes it move"""
+    """This makes the user make it move"""
     if mode == 'drag':
         if cycle < len(drag_animations[ran]) - 1:
             label.configure(image=drag_animations[ran][cycle])
@@ -157,12 +167,12 @@ def movement(mode: str, x: int) -> int:
     """Handles the movement"""
     if mode == 'left':
         if x > - 550:
-            x -= 1
+            x -= 2
         else:
             x = screen_width - 400
     elif mode == 'right':
         if x < screen_width - 400:
-            x += 1
+            x += 2
         else:
             x = -550
     return x
@@ -182,7 +192,7 @@ def dragging(event):
     window.geometry("+%s+%s" % (x, y))
 
 
-def update(counter_so_far, again, mode, cycle, x, y, ran):
+def update(counter_so_far, again, mode, cycle, x, y, ran, todo):
     """This keeps updating to look for inputs, if non, just use event to determine animation"""
     # modules is such a beautiful operation
     if counter_so_far % 5 == 0:
@@ -211,33 +221,24 @@ def update(counter_so_far, again, mode, cycle, x, y, ran):
     window.after(10, update, counter_so_far, again, mode, cycle, x, y, ran)
 
 
-def event_checker(schedule: list[Lecture]):
+def event_checker(schedule: list[Task]):
     """Checks if it's time for class every 10 mins"""
-    if (schedule[0].time - datetime.timedelta(minutes=10)) <= datetime.datetime.now() <= schedule[0].time:
+    if (schedule[0].time - datetime.timedelta(minutes=1)) <= datetime.datetime.now() <= schedule[0].time:
         # she tells u to join class
         text_box.set_text("Time for " + schedule[0].name + "!\n" + schedule[0].info)
-        callback(schedule[0].link)
         text_box.show()
         schedule.pop(0)
 
     if schedule:
-        window.after(600000, event_checker, schedule)
-
-
-def callback(url):
-    webbrowser.open_new(url)
+        window.after(60000, event_checker, schedule)
 
 
 def farewell(event):
-    goodbyes = ['It was my honour..\nto serve you...', "I'm sorry...", "I'm a disgrace..\n to my code...",
-                "So.. cold...", 'Maid in Abyss\n (haha get it)', "But I'm..\n still needed...", 'So.. dark...']
+    goodbyes = ["You'll.... regret..this.....", "Remember to turn me back on again, OK?"]
     text_box.set_text(random.choice(goodbyes))
     text_box.show()
     window.after(2000, window.destroy)
 
-
-# def shut_down():
-#     raise SystemExit(0)
 
 # put da gifs (pronounced like gift without the t) into da list
 idle = [tk.PhotoImage(file=impath + 'idle.gif', format='gif -index %i' % i) for i in range(64)]  # idle gif
@@ -275,16 +276,10 @@ text_box.place(relwidth=1, relheight=0.7)
 
 def foreground_check(mode):
     temp_window_name = win32gui.GetWindowText(win32gui.GetForegroundWindow())
-    if 'Zoom' in temp_window_name:
-        mode = 'class'
-    elif 'YouTube' in temp_window_name:
+    if 'YouTube' in temp_window_name:
         if not mode == 'watch':
             mode = 'prep'
-    elif mode in {'watch', 'class'} and temp_window_name not in {'Chat', 'tk'}:
-        if mode == 'class':
-            print(temp_window_name)
-            text_box.set_text('Class better be over >:[')
-            text_box.show()
+    elif mode in {'watch'} and temp_window_name not in {'Chat', 'tk'}:
         mode = 'idle'
     return mode
 
