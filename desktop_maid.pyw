@@ -73,25 +73,47 @@ class Lecture:
 def make_schedule(day: int):
     classes_so_far = []
     now = datetime.datetime.now()
+    
+    # Extract the current date and time as a datetime object (ignoring the date part of time comparison)
+    current_time = now.replace(hour=0, minute=0, second=0, microsecond=0)  # Ignore the date part
+
     with open('schedule.csv', newline='') as file:
         r = csv.reader(file)
+        
+        # Skip the header row
+        next(r)
+        
+        # Filter entries for the selected day and time
+        for row in r:
+            if len(row) < 5:  # Skip rows that don't have enough columns
+                continue
+            if row[0] == "Weekday":  # Skip the header row
+                continue
+            
+            weekday, name, time_str, link, additional_info = row
+            if weekday == '':  # Skip empty rows
+                continue
 
-        # Skip rows until we make it to the day of the week
-        for _ in range(day + 1):
-            next(r)
+            # Parse the time from 12-hour format to 24-hour format
+            try:
+                # Attempt 12-hour format (AM/PM)
+                time_obj = datetime.datetime.strptime(time_str, "%I:%M %p")
+            except ValueError:
+                # Fallback to 24-hour format if 12-hour parsing fails
+                time_obj = datetime.datetime.strptime(time_str, "%H:%M")
+            
+            # Check if the class is upcoming by comparing only the time
+            if current_time.time() < time_obj.time():  # Compare only the time part
+                info = additional_info if additional_info != "N/A" else ""
+                classes_so_far.append(Lecture(name.strip(), time_obj, link.strip(), info.strip()))
 
-        # puts them into the list
-        row = next(r)
-        for data in row:
-            if data != '':
-                lecture = data.split(',')
-                lecture_time = now.replace(hour=int(lecture[1].split(':')[0]), minute=int(lecture[1].split(':')[1]))
-                if now < lecture_time:
-                    name = lecture[0].strip()
-                    time = lecture_time
-                    link = lecture[2].strip()
-                    info = lecture[3].strip()
-                    classes_so_far.append(Lecture(name, time, link, info))
+    # Sort the classes chronologically by time
+    classes_so_far.sort(key=lambda x: x.time)
+
+    print(f"Found {len(classes_so_far)} upcoming classes.")
+    for lecture in classes_so_far:
+        print(f"Class: {lecture.name}, Time: {lecture.time.strftime('%H:%M')}, Link: {lecture.link}, Info: {lecture.info}")
+
     return classes_so_far
 
 
